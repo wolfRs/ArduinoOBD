@@ -9,6 +9,17 @@
 #define OBD_PROTOCOL PROTO_AUTO
 
 /**************************************
+* cutom pids
+**************************************/
+#define ENGINE_OIL_TEMP 0x5C 
+#define ENGINE_OIL_PRESSURE 0x0A //FUEL PRESSURE pid
+#define MANIFOLD_PRESSURE 0x0B
+#define REFERENCE_TORQUE    0x63
+#define P_TURBO_PRESSURE    0x6F    
+#define P_BOOST_PRES_CONT   0x70 
+#define CVT_TEMP   1017 
+#define FUEL_TEMP  0xA7  
+/**************************************
 * Data logging options
 **************************************/
 // enable(1)/disable(0) data logging (if SD card is present)
