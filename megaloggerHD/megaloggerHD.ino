@@ -102,7 +102,7 @@ void showPIDData(byte pid, int value)
         lcd.setFontSize(FONT_SIZE_XLARGE);
         lcd.setCursor(14, 8);
         if (value >= 10000) break;
-        setColorByValue(value, 2500, 3500, 5000);
+        setColorByValue(value, 2500, 4000, 6000);
         lcd.printInt(value, 6);
         break;
     case PID_SPEED:
@@ -130,22 +130,18 @@ void showPIDData(byte pid, int value)
 #endif
         }
         break;
-    case PID_ENGINE_LOAD:
-        lcd.setFontSize(FONT_SIZE_XLARGE);
-        lcd.setCursor(50, 13);
-        if (value >= 100) value = 99;
-        setColorByValue(value, 75, 80, 100);
-        lcd.printInt(value, 3);
-        break;
-    case PID_THROTTLE:
+    case PID_THROTTLE:{
+        
         lcd.setFontSize(FONT_SIZE_MEDIUM);
         lcd.setCursor(102, 27);
         if (value >= 100) value = 99;
         setColorByValue(value, 50, 75, 100);
         lcd.printInt(value, 2);
         break;
+    }
     case PID_ENGINE_FUEL_RATE:
         if (value < 100) {
+            lcd.setColor(RGB16_WHITE);
             lcd.setFontSize(FONT_SIZE_MEDIUM);
             lcd.setCursor(102, 30);
             lcd.printInt(value, 2);
@@ -153,11 +149,13 @@ void showPIDData(byte pid, int value)
         break;
     case PID_INTAKE_TEMP:
         if (value >= 0 && value < 100) {
+            lcd.setColor(RGB16_WHITE);
             lcd.setFontSize(FONT_SIZE_MEDIUM);
             lcd.setCursor(102, 33);
             lcd.printInt(value, 2);
         }
         break;
+
     }
     lcd.setColor(RGB16_WHITE);
 }
@@ -197,43 +195,52 @@ void initScreen()
     lcd.setColor(RGB16_CYAN);
     lcd.setFontSize(FONT_SIZE_MEDIUM);
     lcd.setCursor(110,4);
-    lcd.print("kph");
+    lcd.print("km/h");
     lcd.setCursor(110, 9);
     lcd.print("RPM");
     lcd.setFontSize(FONT_SIZE_SMALL);
     lcd.setCursor(110, 14);
-    lcd.print("ENGINE");
+    lcd.print("TORQUE");
     lcd.setCursor(110, 15);
-    lcd.print("LOAD %");
+    lcd.print("Nm");
 
     lcd.setFontSize(FONT_SIZE_MEDIUM);
-    lcd.setCursor(208, 3);
-    lcd.print("Elapsed");
-    lcd.setCursor(204, 8);
-    lcd.print("Distance");
-    lcd.setCursor(180, 13);
-    lcd.print("Average Speed");
-
+    lcd.setCursor(180, 3);
+    lcd.print("OilPres");
+    lcd.setCursor(180, 6);
+    lcd.print("OilTemp ");
+    lcd.setCursor(180, 9);
+    lcd.print("Boost");
+    lcd.setCursor(180, 12);
+    lcd.print("Coolant");
+    lcd.setCursor(180, 15);
+    lcd.print("Fuel Lvl");
+ 
     lcd.setCursor(16, 24);
     lcd.print("Battery     V");
     lcd.setCursor(16, 27);
     lcd.print("Throttle    %");
     lcd.setCursor(16, 30);
-    lcd.print("Fuel        L/h");
+    lcd.print("Fuel Con    L/h");
     lcd.setCursor(16, 33);
     lcd.print("Intake:     C");
+    lcd.setCursor(16, 36);
+    lcd.print("Engine:     %");
+
+//working 2
 
     lcd.setCursor(180, 24);
-    lcd.print("UTC:");
+    lcd.print("Elapsed");
     lcd.setCursor(180, 27);
-    lcd.print("LAT:");
+    lcd.print("Dist.");
     lcd.setCursor(180, 30);
-    lcd.print("LNG:");
+    lcd.print("Avg.Sp");
     lcd.setCursor(180, 33);
-    lcd.print("ALT:");
+    lcd.print("CVT Temp:");
     lcd.setCursor(180, 36);
-    lcd.print("SAT:");
-    
+//    lcd.print("SAT Nr:");
+    lcd.print("Fuel Temp:");
+
     lcd.setCursor(340, 3);
     lcd.print("Accelerometer");
     lcd.setCursor(356, 8);
@@ -249,17 +256,6 @@ void initScreen()
 
     lcd.setCursor(352, 34);
     lcd.print("Data Size");
-
-    //lcd.setColor(0xFFFF);
-    /*
-    lcd.setCursor(32, 4);
-    lcd.print("%");
-    lcd.setCursor(68, 5);
-    lcd.print("Intake Air");
-    lcd.setCursor(112, 4);
-    lcd.print("C");
-    */
-
     state |= STATE_GUI_ON;
 
     fadeInScreen();
@@ -367,42 +363,15 @@ void processGPS()
 
     // display UTC date/time
     lcd.setFlags(FLAG_PAD_ZERO);
-    lcd.setCursor(216, 24);
+    lcd.setCursor(216, 33);
     lcd.printLong(time, 8);
 
-    // display latitude
-    lcd.setCursor(216, 27);
-    lcd.print((float)lat / 100000, 5);
-    // display longitude
-    lcd.setCursor(216, 30);
-    lcd.print((float)lng / 100000, 5);
-    // log latitude/longitude
-    logger.logData(PID_GPS_LATITUDE, lat);
-    logger.logData(PID_GPS_LONGITUDE, lng);
-
-    // display altitude
-    int32_t alt = gps.altitude();
-    lcd.setFlags(0);
-    if (alt > -1000000 && alt < 1000000) {
-        lcd.setCursor(216, 33);
-        lcd.print(alt / 100);
-        lcd.print("m ");
-    }
-    // log altitude
-    logger.logData(PID_GPS_ALTITUDE, (int)(alt / 100));
-
-    // display number of satellites
-    if (sat < 100) {
+//    // display number of satellites
+//    if (sat < 100) {
         lcd.setCursor(216, 36);
         lcd.printInt(sat);
-        lcd.write(' ');
-    }
-
-    // only log these data when satellite status is good
-    if (sat >= 3) {
-        gpsSpeed = gps.speed() * 1852 / 100000;
-        logger.logData(PID_GPS_SPEED, gpsSpeed);
-    }
+        lcd.write(' +');
+//    }
 }
 #endif
 
@@ -470,22 +439,97 @@ void logOBDData(byte pid, int value)
     // log data to SD card
     logger.logData(0x100 | pid, value);
 
+//custom pids
+    //oil pressure?
+    if(pid == ENGINE_OIL_PRESSURE){
+      lcd.setFontSize(FONT_SIZE_MEDIUM);
+      lcd.setCursor(260, 3);
+      float pressure = value * 0.01;
+      lcd.print(pressure);
+      lcd.print("bar");
+    }
+//CVT TEMP
+    if(pid == CVT_TEMP){
+        lcd.setFontSize(FONT_SIZE_MEDIUM);
+        lcd.setCursor(216, 33);
+        lcd.printInt(value);
+        lcd.write(" C");
+    }
+    
+    //oil temp
+    if(pid == ENGINE_OIL_TEMP){
+      lcd.setFontSize(FONT_SIZE_MEDIUM);
+      lcd.setCursor(260, 6);
+      lcd.printInt(value);
+      lcd.print(" C");
+    }
+
+    //boost?
+    if(pid == MANIFOLD_PRESSURE){
+      lcd.setFontSize(FONT_SIZE_MEDIUM);
+      lcd.setCursor(260, 9);
+      float boost = value * 0.01;
+      lcd.print(boost);
+    }
+
+    //coolant
+    if(pid == PID_COOLANT_TEMP){
+      lcd.setFontSize(FONT_SIZE_MEDIUM);
+      lcd.setCursor(260, 12);
+      lcd.printInt(value);
+      lcd.print(" C");
+    }
+
+    //fuel
+    if(pid == PID_FUEL_LEVEL){
+      lcd.setFontSize(FONT_SIZE_MEDIUM);
+      lcd.setCursor(260, 15);
+      lcd.printInt(value);
+      lcd.print(" L");
+    }
+
+    //engine load
+    if(pid == PID_ENGINE_LOAD){
+      lcd.setFontSize(FONT_SIZE_MEDIUM);
+      lcd.setCursor(90, 36); 
+      if (value >= 100) value = 99;
+      setColorByValue(value, 75, 80, 100);
+      lcd.printInt(value, 3);
+    }
+
+    //torque
+    if(pid == REFERENCE_TORQUE){
+      lcd.setFontSize(FONT_SIZE_XLARGE);
+      setColorByValue(value, 200, 300, 400);
+      lcd.setCursor(50, 13);
+      lcd.printInt(value);
+    }
+
+    //fuel temp
+    if(pid == FUEL_TEMP){
+      lcd.setFontSize(FONT_SIZE_MEDIUM);
+      lcd.setCursor(217, 36);
+      lcd.printInt(value);
+      lcd.print("C");
+    }
+    
     if (pid == PID_SPEED) {
         // estimate distance travelled since last speed update
         distance += (uint32_t)(value + lastSpeed) * (logger.dataTime - lastSpeedTime) / 6000;
         // display speed
+        //display distance
         lcd.setFontSize(FONT_SIZE_MEDIUM);
-        lcd.setCursor(220, 10);
+        lcd.setCursor(255, 27);
         lcd.printInt(distance / 1000);
         lcd.write('.');
         lcd.printInt(((uint16_t)distance % 1000) / 100);
-        lcd.print(" km");
+        lcd.print("km");
         // calculate and display average speed
         int avgSpeed = (unsigned long)distance * 3600 / (millis() - startTime);
-        lcd.setCursor(220, 15);
+        lcd.setCursor(250, 30);
         lcd.printInt(avgSpeed);
-        lcd.print(" km/h");
-
+        lcd.print("km/h");
+        
         lastSpeed = value;
         lastSpeedTime = logger.dataTime;
     }
@@ -517,9 +561,9 @@ void processTouch()
 
 void showECUCap()
 {
-    static const byte PROGMEM pidlist[] = {PID_ENGINE_LOAD, PID_COOLANT_TEMP, PID_FUEL_PRESSURE, PID_INTAKE_MAP, PID_RPM, PID_SPEED, PID_TIMING_ADVANCE, PID_INTAKE_TEMP, PID_MAF_FLOW, PID_THROTTLE, PID_AUX_INPUT,
+    static const byte PROGMEM pidlist[] = {FUEL_TEMP,CVT_TEMP,PID_ENGINE_LOAD, PID_COOLANT_TEMP, PID_FUEL_PRESSURE, PID_INTAKE_MAP, PID_RPM, PID_SPEED, PID_TIMING_ADVANCE, PID_INTAKE_TEMP, PID_MAF_FLOW, PID_THROTTLE, PID_AUX_INPUT,
         PID_EGR_ERROR, PID_COMMANDED_EVAPORATIVE_PURGE, PID_FUEL_LEVEL, PID_CONTROL_MODULE_VOLTAGE, PID_ABSOLUTE_ENGINE_LOAD, PID_AMBIENT_TEMP, PID_COMMANDED_THROTTLE_ACTUATOR, PID_ETHANOL_FUEL,
-        PID_FUEL_RAIL_PRESSURE};
+        PID_FUEL_RAIL_PRESSURE, ENGINE_OIL_TEMP, MANIFOLD_PRESSURE, REFERENCE_TORQUE, ENGINE_OIL_PRESSURE};
 
     lcd.setFontSize(FONT_SIZE_MEDIUM);
     lcd.setColor(RGB16_WHITE);
@@ -657,8 +701,7 @@ void testOut()
 
 void setup()
 {
-    delay(500);
-    Serial.begin(115200);
+  Serial.begin(115200);
 #if USE_GPS
     GPSUART.begin(GPS_BAUDRATE);
     lastGPSDataTime = 0;
@@ -667,8 +710,10 @@ void setup()
 
     lcd.begin();
     lcd.setFontSize(FONT_SIZE_MEDIUM);
+
+    
     lcd.setColor(0xFFE0);
-    lcd.println("MEGA LOGGER HD - OBD-II/GPS/MEMS");
+    lcd.println("MEGA LOGGER HD - OBD-II/GPS/MEMS Forster Custom");
     lcd.println();
     lcd.setColor(RGB16_WHITE);
 
@@ -687,13 +732,15 @@ void setup()
 
     byte version = obd.begin();
 #ifdef OBD_ADAPTER_I2C
-    lcd.print("OBD I2C Adapter ");
+    lcd.print("OBD-II I2C Adapter ");
 #else
-    lcd.print("OBD Firmware ");
+    lcd.print("OBD-II UART Adapter ");
 #endif
     if (version) {
       lcd.print("Ver. ");
-      lcd.print(version);
+      lcd.print(version / 10);
+      lcd.print('.');
+      lcd.println(version % 10);
     } else {
       lcd.setColor(RGB16_RED);
       lcd.draw(cross, 16, 16);
@@ -767,8 +814,8 @@ void setup()
 void loop()
 {
     static byte index2 = 0;
-    const byte pids[]= {PID_RPM, PID_SPEED, PID_THROTTLE, PID_ENGINE_LOAD};
-    const byte pids2[] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP, PID_ENGINE_FUEL_RATE};
+    const byte pids[]= {PID_RPM, PID_SPEED, PID_THROTTLE, PID_ENGINE_LOAD, REFERENCE_TORQUE};
+    const byte pids2[] = {FUEL_TEMP,CVT_TEMP, PID_COOLANT_TEMP, PID_INTAKE_TEMP, PID_ENGINE_FUEL_RATE, ENGINE_OIL_TEMP, PID_MAF_FLOW, MANIFOLD_PRESSURE, PID_FUEL_LEVEL, PID_ENGINE_LOAD, ENGINE_OIL_PRESSURE};
     int values[sizeof(pids)] = {0};
     uint32_t pidTime = millis();
     // read multiple OBD-II PIDs
@@ -805,11 +852,14 @@ void loop()
         unsigned int sec = (logger.dataTime - startTime) / 1000;
         sprintf(buf, "%02u:%02u", sec / 60, sec % 60);
         lcd.setFontSize(FONT_SIZE_MEDIUM);
-        lcd.setCursor(220, 5);
+        lcd.setCursor(250, 24);
         lcd.print(buf);
+        lcd.print("h");
+       
+        
         // display OBD time
         if (results) {
-          lcd.setCursor(380, 26);
+          lcd.setCursor(10, 5);
           lcd.print((uint16_t)(pidTime / results));
           lcd.print("ms ");
         }
