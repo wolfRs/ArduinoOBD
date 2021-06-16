@@ -6,7 +6,8 @@
 **************************************/
 //#define OBD_ADAPTER_I2C
 #define OBD_ADAPTER_UART
-#define OBD_PROTOCOL PROTO_AUTO
+//#define OBD_PROTOCOL PROTO_AUTO
+#define OBD_PROTOCOL PROTO_CAN_29B_500K  
 
 /**************************************
 * cutom pids
@@ -19,6 +20,7 @@
 #define P_BOOST_PRES_CONT   0x70 
 #define CVT_TEMP   1017 
 #define FUEL_TEMP  0xA7  
+
 /**************************************
 * Data logging options
 **************************************/
@@ -44,7 +46,7 @@
 /**************************************
 * GPS configuration
 **************************************/
-#define USE_GPS 1
+#define USE_GPS 0
 #define GPSUART Serial2
 #define MAX_GPS_PROCESS_TIME 50 /* ms */
 #define GPS_DATA_TIMEOUT 2000 /* ms */
