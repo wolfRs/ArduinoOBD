@@ -5,6 +5,10 @@
 * Written by Stanley Huang <support@freematics.com.au>
 *************************************************************************/
 
+/******
+ Subaru Custom PIDS
+*******/
+
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
@@ -713,7 +717,7 @@ void setup()
 
     
     lcd.setColor(0xFFE0);
-    lcd.println("MEGA LOGGER HD - OBD-II/GPS/MEMS Forster Custom");
+    lcd.println("MEGA LOGGER HD - OBD-II/GPS/MEMS  Subaru Custom PIDS");
     lcd.println();
     lcd.setColor(RGB16_WHITE);
 
